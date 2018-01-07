@@ -4,32 +4,30 @@
 
 (def max-particles 300)
 
-(defn update-particle [particle]
+(defn update-particle [particle state age-fn]
   (-> particle
-      (update :life dec)
-      (update :x-velocity * 0.95)
-      (update :y-velocity * 0.95)
-      (update :x + (:x-velocity particle 0))
-      (update :y + (:y-velocity particle 0))))
+      (age-fn state)
+      (update :life dec)))
+      
 
 (defn draw-particle [particle]
   (when (pos? (:life particle))
-    (q/fill (:color particle) 255 255)
-    (q/ellipse (:x particle) (:y particle) (:width particle 1) (:height particle 1))))
+    (q/fill (:color particle) 255 255 (:alpha particle 255))
+    (apply q/ellipse (concat (:coords particle) (:size particle [1 1])))))
 
 (defn remove-dead [particles]
   (remove #(neg? (:life %)) particles))
 
-(defn spawn-particles [create-particle particles]
+(defn spawn-particles [emit-fn state particles]
   (if (< (count particles) max-particles)
-    (conj particles (create-particle))
+    (conj particles (emit-fn state))
     particles))
 
-(defn update-particles [particles create-particle]
+(defn update-particles [particles state emit-fn age-fn]
   (->> particles
        remove-dead
-       (spawn-particles create-particle)
-       (map update-particle)))
+       (spawn-particles emit-fn state)
+       (map #(update-particle % state age-fn))))
 
 (defn draw-particles [particles]
   (mapv draw-particle particles))

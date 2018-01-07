@@ -15,19 +15,29 @@
    :particles []})
 
 (defn create-particle [state]
-  (fn []
-    (let [[x y] (cm/angle->coords (:angle state) 150)]
-      {:x x :y y
-       :width 10 :height 10
-       :life 220
-       :x-velocity (* (q/random 0.01 0.03) (- 0 x))
-       :y-velocity (* (q/random 0.01 0.03) (- 0 y))
-       :color (:color state)})))
+  (let [[x y] (cm/angle->coords (:angle state) 150)]
+    {:coords [x y]
+     :velocity [(* (q/random 0.01 0.03) (- 0 x))
+                (* (q/random 0.01 0.03) (- 0 y))]
+     :size [10 10]
+     :life 220
+     :alpha 255
+     :color (:color state)}))
+
+(defn age-fn [particle state]
+  (-> particle
+      (update :alpha dec)
+      (update :velocity #(map * % (repeat 0.98)))
+      (update :coords #(map + % (:velocity particle)))))      
+
 
 (defn update-state [state]
   {:color (mod (+ (:color state) 1) 255)
    :angle (+ (:angle state) 0.05)
-   :particles (p/update-particles (:particles state) (create-particle state))})
+   :particles (p/update-particles (:particles state)
+                                  state
+                                  create-particle
+                                  age-fn)})
 
 (defn draw-state [state]
                                         ; Clear the sketch by filling it with light-grey color.
