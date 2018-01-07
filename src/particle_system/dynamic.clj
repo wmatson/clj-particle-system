@@ -3,17 +3,6 @@
             [particle-system.particle :as p]
             [particle-system.common-math :as cm]))
 
-(defn setup []
-  ; Set frame rate to 30 frames per second.
-  (q/frame-rate 60)
-  ; Set color mode to HSB (HSV) instead of default RGB.
-  (q/color-mode :hsb)
-  ; setup function returns initial state. It contains
-  ; circle color and position.
-  {:color 0
-   :angle 0
-   :particles []})
-
 (defn create-particle [state]
   (let [[x y] (cm/angle->coords (:angle state) 150)]
     {:coords [x y]
@@ -27,17 +16,27 @@
 (defn age-fn [particle state]
   (-> particle
       (update :alpha dec)
-      (update :velocity #(map * % (repeat 0.98)))
-      (update :coords #(map + % (:velocity particle)))))      
+      (update :velocity cm/vector-decay 0.99)
+      (update :coords cm/vector-add (:velocity particle))))
 
+(defn setup []
+  ; Set frame rate to 30 frames per second.
+  (q/frame-rate 60)
+  ; Set color mode to HSB (HSV) instead of default RGB.
+  (q/color-mode :hsb)
+  ; setup function returns initial state. It contains
+  ; circle color and position.
+  {:color 0
+   :angle 0
+   :p-system {:max-particles 300
+              :age-fn age-fn
+              :emit-fn create-particle
+              :particles []}})
 
 (defn update-state [state]
   {:color (mod (+ (:color state) 1) 255)
    :angle (+ (:angle state) 0.05)
-   :particles (p/update-particles (:particles state)
-                                  state
-                                  create-particle
-                                  age-fn)})
+   :p-system (p/update-p-system (:p-system state) state)})
 
 (defn draw-state [state]
                                         ; Clear the sketch by filling it with light-grey color.
@@ -53,4 +52,4 @@
                          (/ (q/height) 2)]
       ; Draw the circle.
       (q/ellipse x y 10 10)
-      (p/draw-particles (:particles state)))))
+      (p/draw-p-system (:p-system state)))))
