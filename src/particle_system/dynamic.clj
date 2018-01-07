@@ -9,7 +9,7 @@
      :velocity [(* (q/random 0.01 0.03) (- 0 x))
                 (* (q/random 0.01 0.03) (- 0 y))]
      :size [10 10]
-     :life 220
+     :life 200
      :alpha 255
      :color (:color state)}))
 
@@ -19,24 +19,31 @@
       (update :velocity cm/vector-decay 0.99)
       (update :coords cm/vector-add (:velocity particle))))
 
+(def p-system-def {:max-particles 300
+                   :burst 1
+                   :emit-delay 1
+                   :age-fn age-fn
+                   :emit-fn create-particle})
+
 (defn setup []
-  ; Set frame rate to 30 frames per second.
+                                        ; Set frame rate to 30 frames per second.
   (q/frame-rate 60)
-  ; Set color mode to HSB (HSV) instead of default RGB.
+                                        ; Set color mode to HSB (HSV) instead of default RGB.
   (q/color-mode :hsb)
-  ; setup function returns initial state. It contains
-  ; circle color and position.
+                                        ; setup function returns initial state. It contains
+                                        ; circle color and position.
   {:color 0
    :angle 0
-   :p-system {:max-particles 300
-              :age-fn age-fn
-              :emit-fn create-particle
-              :particles []}})
+   :p-system (p/init-system p-system-def)})
+
+
+(defn update-fns [curr-system]
+  (merge curr-system p-system-def))
 
 (defn update-state [state]
   {:color (mod (+ (:color state) 1) 255)
    :angle (+ (:angle state) 0.05)
-   :p-system (p/update-p-system (:p-system state) state)})
+   :p-system (update-fns (p/update-p-system (:p-system state) state))})
 
 (defn draw-state [state]
                                         ; Clear the sketch by filling it with light-grey color.
