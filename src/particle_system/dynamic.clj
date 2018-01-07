@@ -1,26 +1,32 @@
 (ns particle-system.dynamic
   (:require [quil.core :as q]
             [particle-system.particle :as p]
-            [particle-system.common-math :as cm]))
+            [particle-system.common-math :as cm]
+            [particle-system.particle-aging :as pa]))
+
+(defn velocity-towards-center [coords min-factor max-factor]
+  (map #(* (q/random min-factor max-factor)
+           (- 0 %))
+       coords))
 
 (defn create-particle [state]
   (let [[x y] (cm/angle->coords (:angle state) 150)]
     {:coords [x y]
-     :velocity [(* (q/random 0.01 0.03) (- 0 x))
-                (* (q/random 0.01 0.03) (- 0 y))]
-     :size [10 10]
-     :life 200
+     :velocity (velocity-towards-center [x y] 0.01 0.03)
+     :size [20 20]
+     :life 100
      :alpha 255
      :color (:color state)}))
 
 (defn age-fn [particle state]
   (-> particle
-      (update :alpha dec)
-      (update :velocity cm/vector-decay 0.99)
-      (update :coords cm/vector-add (:velocity particle))))
-
+      (pa/fade-opacity 4)
+      (pa/velocity-movement)
+      (pa/shrink 0.99)
+      (pa/simple-friction 0.99)))
+      
 (def p-system-def {:max-particles 300
-                   :burst 1
+                   :burst 3
                    :emit-delay 1
                    :age-fn age-fn
                    :emit-fn create-particle})
