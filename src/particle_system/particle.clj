@@ -2,9 +2,16 @@
   (:require [quil.core :as q]
             [particle-system.common-math :as cm]))
 
+(defn draw-particle [particle]
+  (when (pos? (:life particle))
+    (apply q/stroke (:outline particle [0 0 0 0]))
+    (q/fill (:color particle) 255 255 (:alpha particle 255))
+    (apply q/ellipse (concat (:coords particle) (:size particle [1 1])))))
+
 (def system-defaults
   {:max-particles 300
-   :emit-delay 1})
+   :emit-delay 1
+   :draw-fn draw-particle})
 
 (defn init-system [system-def]
   (let [defaulted (merge system-defaults system-def)]
@@ -16,12 +23,6 @@
   (-> particle
       (age-fn state)
       (update :life dec)))
-      
-
-(defn draw-particle [particle]
-  (when (pos? (:life particle))
-    (q/fill (:color particle) 255 255 (:alpha particle 255))
-    (apply q/ellipse (concat (:coords particle) (:size particle [1 1])))))
 
 (defn remove-dead [particles]
   (remove #(neg? (:life %)) particles))
@@ -50,8 +51,5 @@
       (update :particles remove-dead)
       (update-particles state)))
 
-(defn draw-particles [particles]
-  (mapv draw-particle particles))
-
-(defn draw-p-system [{:keys [particles] :as p-system}]
-  (draw-particles particles))
+(defn draw-p-system [{:keys [particles draw-fn] :as p-system}]
+  (mapv draw-fn particles))
