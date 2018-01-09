@@ -1,18 +1,14 @@
 # particle-system
 
-A Quil sketch designed to ... well, that part is up to you.
+A quick project to play around with making a particle system on my way to learn quil and evaluate it as a potential rendering system for a game.
 
 ## Usage
 
-LightTable - open `core.clj` and press `Ctrl+Shift+Enter` to evaluate the file.
-
-Emacs - run cider, open `core.clj` and press `C-c C-k` to evaluate the file.
-
-REPL - run `(require 'particle-system.core)`.
+Run particle-system.core/-main
 
 ## License
 
-Copyright © 2016 FIXME
+Copyright © 2016 Wesley Matson
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
