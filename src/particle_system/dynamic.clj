@@ -11,7 +11,7 @@
 
 (defn create-particle [state]
   (let [[x y] (cm/angle->coords (:angle state) 150)]
-    {:coords [0 0] ;[x y]
+    {:coords [0 0];[x y]
      :velocity [(q/random -0.5 0.5) (q/random -3 0)] ;(velocity-towards-center [x y] 0.01 0.03)
      :size [10 10]
      :life 100
@@ -26,17 +26,24 @@
       (pa/shrink 0.99)
       (pa/simple-friction 0.99)))
 
-(defn draw-fn [{:keys [coords size color alpha] :as  particle}]
+(defn particle->rect [{:keys [coords size] :as particle}]
+  (concat (map #(- %1 (/ %2 2)) coords size) size))
+
+(defn draw-fn [{:keys [color alpha coords] :as  particle}]
   (q/no-stroke)
   (q/fill color 255 255 alpha)
-  (apply q/rect (concat (map #(- %1 (/ %2 2)) coords size) size)))
-      
+  (q/with-translation coords
+    (q/with-rotation [0.25]
+      (q/quad -5 0 0 -5 5 0 0 5))))
+
 (def p-system-def {:max-particles 300
                    :burst 3
                    :emit-delay 1
                    :age-fn age-fn
                    :emit-fn create-particle
                    :draw-fn draw-fn})
+
+;; (particle->rect (age-fn (create-particle {:angle 3}) {}))
 
 (defn setup []
                                         ; Set frame rate to 30 frames per second.
