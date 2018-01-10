@@ -6,10 +6,6 @@
             [particle-system.scenes.spraying-circle]
             [particle-system.scenes.fire]))
 
-(defn particle->rect [{:keys [coords size] :as particle}]
-  (concat (map #(- %1 (/ %2 2)) coords size) size))
-
-
 ;;Using the vars enables live-reload
 (def p-systems
   [#'particle-system.scenes.spraying-circle/p-system-def

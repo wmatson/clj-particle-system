@@ -3,29 +3,33 @@
             [quil.core :as q]
             [particle-system.particle-aging :as pa]))
 
+(defn particle->rect [{:keys [coords size] :as particle}]
+  (concat (map #(- %1 (/ %2 2)) [0 0] size)
+          size))
+
 (defn create-particle [state]
   (let [[x y] (cm/angle->coords (:angle state) 150)]
-    {:coords [0 0];[x y]
+    {:coords [(q/random -10.5 10.5) 0];[x y]
      :velocity [(q/random -0.5 0.5) (q/random -3 0)] ;(velocity-towards-center [x y] 0.01 0.03)
-     :size [10 10]
+     :size (repeat 2 (q/random 5 20))
      :life 100
-     :alpha 255
-     :color 0;(:color state)
+     :alpha 192
+     :color (q/random 0 40);(:color state)
      :outline [255 255 255 0]}))
 
 (defn age-fn [particle state]
   (-> particle
-      (pa/fade-opacity 4)
+      (pa/fade-opacity (q/random 0 10))
       (pa/velocity-movement)
-      (pa/shrink 0.99)
+      (pa/shrink 0.95)
       (pa/simple-friction 0.99)))
 
 (defn draw-fn [{:keys [color alpha coords] :as  particle}]
   (q/no-stroke)
   (q/fill color 255 255 alpha)
   (q/with-translation coords
-    (q/with-rotation [0.25]
-      (q/quad -5 0 0 -5 5 0 0 5))))
+    (q/with-rotation [(q/radians 45)]
+       (apply q/rect (particle->rect particle)))))
 
 (def p-system-def {:max-particles 300
                    :burst 3
