@@ -11,6 +11,7 @@
     :setup psd/setup
                                         ; update-state is called on each iteration before draw-state.
     :update psd/update-state
+    :key-pressed psd/on-keyboard-event
     :draw psd/draw-state
     :features [:keep-on-top]
                                         ; This sketch uses functional-mode middleware.

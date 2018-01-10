@@ -2,48 +2,30 @@
   (:require [quil.core :as q]
             [particle-system.particle :as p]
             [particle-system.common-math :as cm]
-            [particle-system.particle-aging :as pa]))
-
-(defn velocity-towards-center [coords min-factor max-factor]
-  (map #(* (q/random min-factor max-factor)
-           (- 0 %))
-       coords))
-
-(defn create-particle [state]
-  (let [[x y] (cm/angle->coords (:angle state) 150)]
-    {:coords [0 0];[x y]
-     :velocity [(q/random -0.5 0.5) (q/random -3 0)] ;(velocity-towards-center [x y] 0.01 0.03)
-     :size [10 10]
-     :life 100
-     :alpha 255
-     :color 0;(:color state)
-     :outline [255 255 255 0]}))
-
-(defn age-fn [particle state]
-  (-> particle
-      (pa/fade-opacity 4)
-      (pa/velocity-movement)
-      (pa/shrink 0.99)
-      (pa/simple-friction 0.99)))
+            [particle-system.particle-aging :as pa]
+            [particle-system.scenes.spraying-circle]
+            [particle-system.scenes.fire]))
 
 (defn particle->rect [{:keys [coords size] :as particle}]
   (concat (map #(- %1 (/ %2 2)) coords size) size))
 
-(defn draw-fn [{:keys [color alpha coords] :as  particle}]
-  (q/no-stroke)
-  (q/fill color 255 255 alpha)
-  (q/with-translation coords
-    (q/with-rotation [0.25]
-      (q/quad -5 0 0 -5 5 0 0 5))))
 
-(def p-system-def {:max-particles 300
-                   :burst 3
-                   :emit-delay 1
-                   :age-fn age-fn
-                   :emit-fn create-particle
-                   :draw-fn draw-fn})
+;;Using the vars enables live-reload
+(def p-systems
+  [#'particle-system.scenes.spraying-circle/p-system-def
+   #'particle-system.scenes.fire/p-system-def])
 
-;; (particle->rect (age-fn (create-particle {:angle 3}) {}))
+(defn live-reload-p-system [state curr-system]
+  (merge curr-system @(first (:p-systems state))))
+
+(defn rotate-left
+  ([seq] (rotate seq 1))
+  ([seq n]
+   (let [size (count seq)
+         rot (mod n size)]
+     (->> (cycle seq)
+          (drop rot)
+          (take size)))))
 
 (defn setup []
                                         ; Set frame rate to 30 frames per second.
@@ -54,16 +36,20 @@
                                         ; circle color and position.
   {:color 0
    :angle 0
-   :p-system (p/init-system p-system-def)})
+   :p-systems p-systems
+   :p-system (p/init-system @(first p-systems))})
 
-
-(defn update-fns [curr-system]
-  (merge curr-system p-system-def))
+(defn on-keyboard-event [state event]
+  (case (:key event)
+    :left (update state :p-systems rotate-left 1)
+    :right (update state :p-systems rotate-left -1)
+    state))
 
 (defn update-state [state]
-  {:color (mod (+ (:color state) 1) 255)
-   :angle (+ (:angle state) 0.05)
-   :p-system (update-fns (p/update-p-system (:p-system state) state))})
+  (assoc state
+         :color (mod (inc (:color state)) 255)
+         :angle (+ (:angle state) 0.05)
+         :p-system (live-reload-p-system state (p/update-p-system (:p-system state) state))))
 
 (defn draw-state [state]
                                         ; Clear the sketch by filling it with light-grey color.
