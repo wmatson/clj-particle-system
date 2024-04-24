@@ -15,7 +15,7 @@
   (merge curr-system @(first (:p-systems state))))
 
 (defn rotate-left
-  ([seq] (rotate seq 1))
+  ([seq] (rotate-left seq 1))
   ([seq n]
    (let [size (count seq)
          rot (mod n size)]
@@ -55,7 +55,7 @@
 
   ; Calculate x and y coordinates of the circle.
   (let [angle (:angle state)
-        [x y] (cm/angle->coords angle 150)] 
+        [x y] (cm/angle->coords angle 150)]
     ; Move origin point to the center of the sketch.
     (q/with-translation [(/ (q/width) 2)
                          (/ (q/height) 2)]
